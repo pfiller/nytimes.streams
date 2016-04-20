@@ -27,18 +27,35 @@ var StreamBox = React.createClass({
         id: jumble.id,
         body: details.summaries[0].body,
         date_created: details.date_created,
+        display_asset_style: details.display_asset_style,
         url: details.asset.url
       };
 
-      var imageData = details.display_asset;
-      if(imageData){
+      if(story.display_asset_style){
+        var imageData = details.display_asset;
         story.image = {};
+
         if(imageData.crops.external){
-          story.image.src = imageData.crops.external.url;
+          var image = imageData.crops.external;
+        }
+        else if(story.display_asset_style==="thumb_square"){
+          var image = imageData.crops.thumbStandard;
         }
         else{
-          story.image.src = imageData.crops.thumbStandard.url;
+          // wide images are a mystery -- look for one that fits
+          for(var crop in imageData.crops){
+            if (imageData.crops.hasOwnProperty(crop)) {
+              var image = imageData.crops[crop];
+              if(image.width > 250 && image.width < 500){
+                break;
+              }
+            }
+          }
         }
+
+        story.image.src = image.url;
+        story.image.width = image.width;
+        story.image.height = image.height;
       }
 
       return story;
@@ -58,7 +75,7 @@ var NewsList = React.createClass({
   render: function() {
     var commentNodes = this.props.data.map(function(news) {
       return (
-        <News key={news.id} image={news.image} created={news.date_created} href={news.url}>
+        <News key={news.id} image={news.image} created={news.date_created} href={news.url} imageStyle={news.display_asset_style}>
           {news.body}
         </News>
       );
@@ -83,8 +100,11 @@ var News = React.createClass({
     }
   },
   storyImage: function() {
-    if(this.props.image){
-      return <img src={this.props.image.src} width="60" height="60" />;
+    if(this.props.imageStyle==="wide"){
+      return <img src={this.props.image.src} width="{this.props.image.width}" height="{this.props.image.height}" className="thumbWide" />;
+    }
+    else if(this.props.imageStyle){
+      return <img src={this.props.image.src} width="60" height="60" className="thumbStandard" />;
     }
     else{
       return null;
