@@ -22,24 +22,26 @@ var StreamBox = React.createClass({
   parseData: function(data) {
     var parsedData = data.map(function(jumble){
       var details = jumble.posts[0];
-      var imageData = details.display_asset;
-      var image = {};
-      if(imageData){
-        if(imageData.crops.external){
-          image.src = imageData.crops.external.url;
-        }
-        else{
-          image.src = imageData.crops.thumbStandard.url;
-        }
-      }
-
-      return {
+      
+      var story = {
         id: jumble.id,
         body: details.summaries[0].body,
         date_created: details.date_created,
-        image: image,
         url: details.asset.url
       };
+
+      var imageData = details.display_asset;
+      if(imageData){
+        story.image = {};
+        if(imageData.crops.external){
+          story.image.src = imageData.crops.external.url;
+        }
+        else{
+          story.image.src = imageData.crops.thumbStandard.url;
+        }
+      }
+
+      return story;
     });
     this.setState({data: parsedData});
   },
@@ -80,11 +82,19 @@ var News = React.createClass({
       return Math.floor(hours/24) + "d";
     }
   },
+  storyImage: function() {
+    if(this.props.image){
+      return <img src={this.props.image.src} width="60" height="60" />;
+    }
+    else{
+      return null;
+    }
+  },
   render: function() {
     return (
       <a href={this.props.href}>
         <li className="story">
-          <img src={this.props.image.src} width="60" height="60" />
+          {this.storyImage()}
           <span dangerouslySetInnerHTML={{__html: this.props.children.toString()}} /><br />
           <div className="timeAgo">{this.hoursAgo()}</div>
         </li>
